@@ -8,15 +8,17 @@ const Dashboard = () => {
 
   const token = localStorage.getItem('token');
 
-  // 🔁 Fetch user tickets on load
   useEffect(() => {
     const fetchTickets = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/tickets/my', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await axios.get(
+          `${process.env.REACT_APP_API_URL}/tickets/my`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
         setTickets(res.data);
       } catch (err) {
         console.error('Failed to fetch tickets', err);
@@ -26,14 +28,13 @@ const Dashboard = () => {
     fetchTickets();
   }, [token]);
 
-  // ➕ Create new ticket
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage('');
 
     try {
       const res = await axios.post(
-        'http://localhost:5000/api/tickets',
+        `${process.env.REACT_APP_API_URL}/tickets`,
         form,
         {
           headers: {
@@ -41,7 +42,7 @@ const Dashboard = () => {
           },
         }
       );
-      setTickets([...tickets, res.data]); // Add new ticket to list
+      setTickets([...tickets, res.data]);
       setForm({ title: '', description: '' });
       setMessage('✅ Ticket created successfully!');
     } catch (err) {

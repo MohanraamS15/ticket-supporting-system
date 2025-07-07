@@ -9,11 +9,12 @@ const Admin = () => {
   useEffect(() => {
     const fetchTickets = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/tickets/all', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const res = await axios.get(
+          `${process.env.REACT_APP_API_URL}/tickets/all`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
         setTickets(res.data);
       } catch (err) {
         console.error('Failed to fetch tickets', err);
@@ -24,30 +25,29 @@ const Admin = () => {
   }, [token]);
 
   const updateStatus = async (id, newStatus) => {
-  try {
-    await axios.patch(
-      `http://localhost:5000/api/tickets/${id}/status`,
-      { status: newStatus },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    try {
+      await axios.patch(
+        `${process.env.REACT_APP_API_URL}/tickets/${id}/status`,
+        { status: newStatus },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-    // Update UI locally
-    setTickets((prev) =>
-      prev.map((ticket) =>
-        ticket._id === id ? { ...ticket, status: newStatus } : ticket
-      )
-    );
+      setTickets((prev) =>
+        prev.map((ticket) =>
+          ticket._id === id ? { ...ticket, status: newStatus } : ticket
+        )
+      );
 
-    setMessage('✅ Status updated successfully!');
-  } catch (err) {
-    console.error('Failed to update status:', err);
-    setMessage('❌ Status update failed.');
-  }
-};
+      setMessage('✅ Status updated successfully!');
+    } catch (err) {
+      console.error('Failed to update status:', err);
+      setMessage('❌ Status update failed.');
+    }
+  };
 
   return (
     <div style={{ maxWidth: 700, margin: '30px auto' }}>

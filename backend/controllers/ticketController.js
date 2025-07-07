@@ -37,16 +37,22 @@ exports.getAllTickets = async (req, res) => {
 };
 
 // 🔄 Update ticket status (admin only)
+// 🔄 Update ticket status (admin only)
 exports.updateTicketStatus = async (req, res) => {
   try {
     const { status } = req.body;
-    const ticket = await Ticket.findByIdAndUpdate(
-      req.params.id,
-      { status },
-      { new: true }
-    );
+
+    const ticket = await Ticket.findById(req.params.id);
+    if (!ticket) {
+      return res.status(404).json({ msg: 'Ticket not found' });
+    }
+
+    ticket.status = status;
+    await ticket.save();
+
     res.json(ticket);
   } catch (err) {
-    res.status(500).json({ msg: err.message });
+    console.error('Update error:', err);
+    res.status(500).json({ msg: 'Server error' });
   }
 };

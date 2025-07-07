@@ -1,4 +1,3 @@
- 
 const express = require('express');
 const router = express.Router();
 
@@ -13,11 +12,11 @@ const protect = require('../middleware/authMiddleware');
 const adminOnly = require('../middleware/roleMiddleware');
 
 // 👤 User routes
-router.post('/', protect, createTicket);
-router.get('/my', protect, getMyTickets);
+router.post('/', protect, createTicket);         // POST /api/tickets
+router.get('/my', protect, getMyTickets);        // GET  /api/tickets/my
 
 // 👑 Admin routes
-router.get('/all', protect, adminOnly, getAllTickets);
-router.patch('/:id/status', protect, adminOnly, updateTicketStatus);
+router.get('/all', protect, adminOnly, getAllTickets);            // GET /api/tickets/all
+router.patch('/:id/status', protect, adminOnly, updateTicketStatus); // PATCH /api/tickets/:id/status
 
 module.exports = router;

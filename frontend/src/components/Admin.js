@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const Admin = () => {
   const [tickets, setTickets] = useState([]);
   const [message, setMessage] = useState('');
   const token = localStorage.getItem('token');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTickets = async () => {
@@ -49,9 +51,37 @@ const Admin = () => {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    navigate('/');
+  };
+
   return (
     <div style={{ maxWidth: 700, margin: '30px auto' }}>
-      <h2>Admin Panel</h2>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: '20px'
+      }}>
+        <h2>Admin Panel</h2>
+        <button 
+          onClick={handleLogout}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#dc3545',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            fontSize: '14px'
+          }}
+        >
+          Logout
+        </button>
+      </div>
+      
       {message && <p style={{ color: 'green' }}>{message}</p>}
       {tickets.length === 0 ? (
         <p>No tickets found.</p>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
   const [tickets, setTickets] = useState([]);
@@ -7,6 +8,7 @@ const Dashboard = () => {
   const [message, setMessage] = useState('');
 
   const token = localStorage.getItem('token');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchTickets = async () => {
@@ -51,9 +53,36 @@ const Dashboard = () => {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    navigate('/');
+  };
+
   return (
     <div style={{ maxWidth: 600, margin: '30px auto' }}>
-      <h2>User Dashboard</h2>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: '20px'
+      }}>
+        <h2>User Dashboard</h2>
+        <button 
+          onClick={handleLogout}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#dc3545',
+            color: 'white',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            fontSize: '14px'
+          }}
+        >
+          Logout
+        </button>
+      </div>
 
       <h3>Create New Ticket</h3>
       <form onSubmit={handleSubmit}>

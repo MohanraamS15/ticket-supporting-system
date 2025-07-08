@@ -7,6 +7,14 @@ const Admin = () => {
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState(''); // 'success' or 'error'
   const [loadingTickets, setLoadingTickets] = useState({});
+  
+  // Filter states
+  const [filters, setFilters] = useState({
+    status: 'all',
+    sortBy: 'newest',
+    searchQuery: ''
+  });
+  
   const token = localStorage.getItem('token');
   const navigate = useNavigate();
 
@@ -36,6 +44,56 @@ const Admin = () => {
       setMessage('');
       setMessageType('');
     }, 4000);
+  };
+
+  // Filter and sort tickets
+  const getFilteredAndSortedTickets = () => {
+    let filteredTickets = [...tickets];
+
+    // Filter by status
+    if (filters.status !== 'all') {
+      filteredTickets = filteredTickets.filter(ticket => ticket.status === filters.status);
+    }
+
+    // Filter by search query
+    if (filters.searchQuery.trim()) {
+      const query = filters.searchQuery.toLowerCase();
+      filteredTickets = filteredTickets.filter(ticket => 
+        ticket.title.toLowerCase().includes(query) ||
+        ticket.description.toLowerCase().includes(query) ||
+        (ticket.user?.name || '').toLowerCase().includes(query)
+      );
+    }
+
+    // Sort tickets
+    filteredTickets.sort((a, b) => {
+      switch (filters.sortBy) {
+        case 'newest':
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        case 'oldest':
+          return new Date(a.createdAt) - new Date(b.createdAt);
+        case 'title':
+          return a.title.localeCompare(b.title);
+        case 'status':
+          const statusOrder = { 'open': 1, 'in-progress': 2, 'closed': 3 };
+          return statusOrder[a.status] - statusOrder[b.status];
+        default:
+          return 0;
+      }
+    });
+
+    return filteredTickets;
+  };
+
+  // Calculate ticket statistics
+  const getTicketStats = () => {
+    const stats = {
+      total: tickets.length,
+      open: tickets.filter(ticket => ticket.status === 'open').length,
+      inProgress: tickets.filter(ticket => ticket.status === 'in-progress').length,
+      closed: tickets.filter(ticket => ticket.status === 'closed').length
+    };
+    return stats;
   };
 
   const getStatusColor = (status) => {
@@ -98,6 +156,17 @@ const Admin = () => {
     navigate('/');
   };
 
+  const clearFilters = () => {
+    setFilters({
+      status: 'all',
+      sortBy: 'newest',
+      searchQuery: ''
+    });
+  };
+
+  const stats = getTicketStats();
+  const filteredTickets = getFilteredAndSortedTickets();
+
   const styles = {
     container: {
       maxWidth: '1000px',
@@ -132,10 +201,69 @@ const Admin = () => {
       cursor: 'pointer',
       fontSize: '14px',
       fontWeight: '600',
-      transition: 'all 0.3s ease',
-      ':hover': {
-        backgroundColor: '#c0392b'
-      }
+      transition: 'all 0.3s ease'
+    },
+    // Simple filter section
+    filterSection: {
+      backgroundColor: 'white',
+      padding: '20px',
+      borderRadius: '12px',
+      boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+      marginBottom: '30px'
+    },
+    filterGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+      gap: '15px',
+      marginBottom: '15px'
+    },
+    filterInput: {
+      padding: '10px',
+      fontSize: '14px',
+      border: '1px solid #ddd',
+      borderRadius: '4px',
+      backgroundColor: 'white'
+    },
+    clearBtn: {
+      padding: '8px 16px',
+      backgroundColor: '#6c757d',
+      color: 'white',
+      border: 'none',
+      borderRadius: '4px',
+      cursor: 'pointer',
+      fontSize: '14px'
+    },
+    resultsCount: {
+      fontSize: '14px',
+      color: '#666',
+      marginLeft: '15px'
+    },
+    statsContainer: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+      gap: '20px',
+      marginBottom: '30px'
+    },
+    statCard: {
+      backgroundColor: 'white',
+      padding: '25px',
+      borderRadius: '12px',
+      boxShadow: '0 4px 6px rgba(0,0,0,0.07)',
+      textAlign: 'center',
+      transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+    },
+    statNumber: {
+      fontSize: '36px',
+      fontWeight: 'bold',
+      marginBottom: '10px',
+      display: 'block'
+    },
+    statLabel: {
+      fontSize: '14px',
+      color: '#6c757d',
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      letterSpacing: '0.5px'
     },
     notification: {
       padding: '15px 20px',
@@ -164,10 +292,6 @@ const Admin = () => {
       marginBottom: '20px',
       boxShadow: '0 4px 6px rgba(0,0,0,0.07)',
       transition: 'transform 0.2s ease, box-shadow 0.2s ease'
-    },
-    ticketCardHover: {
-      transform: 'translateY(-2px)',
-      boxShadow: '0 8px 25px rgba(0,0,0,0.15)'
     },
     ticketTitle: {
       fontSize: '20px',
@@ -210,10 +334,6 @@ const Admin = () => {
       minWidth: '150px',
       transition: 'all 0.3s ease'
     },
-    statusSelectFocus: {
-      outline: 'none',
-      borderColor: '#3498db'
-    },
     loadingSpinner: {
       display: 'inline-block',
       width: '20px',
@@ -255,6 +375,113 @@ const Admin = () => {
         </button>
       </div>
       
+      {/* Statistics Cards */}
+      <div style={styles.statsContainer}>
+        <div style={styles.statCard}
+             onMouseEnter={(e) => {
+               e.target.style.transform = 'translateY(-5px)';
+               e.target.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+             }}
+             onMouseLeave={(e) => {
+               e.target.style.transform = 'translateY(0)';
+               e.target.style.boxShadow = '0 4px 6px rgba(0,0,0,0.07)';
+             }}>
+          <span style={{...styles.statNumber, color: '#3498db'}}>
+            {stats.total}
+          </span>
+          <span style={styles.statLabel}>📋 Total Tickets</span>
+        </div>
+        
+        <div style={styles.statCard}
+             onMouseEnter={(e) => {
+               e.target.style.transform = 'translateY(-5px)';
+               e.target.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+             }}
+             onMouseLeave={(e) => {
+               e.target.style.transform = 'translateY(0)';
+               e.target.style.boxShadow = '0 4px 6px rgba(0,0,0,0.07)';
+             }}>
+          <span style={{...styles.statNumber, color: '#e74c3c'}}>
+            {stats.open}
+          </span>
+          <span style={styles.statLabel}>🔴 Open Tickets</span>
+        </div>
+        
+        <div style={styles.statCard}
+             onMouseEnter={(e) => {
+               e.target.style.transform = 'translateY(-5px)';
+               e.target.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+             }}
+             onMouseLeave={(e) => {
+               e.target.style.transform = 'translateY(0)';
+               e.target.style.boxShadow = '0 4px 6px rgba(0,0,0,0.07)';
+             }}>
+          <span style={{...styles.statNumber, color: '#f39c12'}}>
+            {stats.inProgress}
+          </span>
+          <span style={styles.statLabel}>🟡 In Progress</span>
+        </div>
+        
+        <div style={styles.statCard}
+             onMouseEnter={(e) => {
+               e.target.style.transform = 'translateY(-5px)';
+               e.target.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+             }}
+             onMouseLeave={(e) => {
+               e.target.style.transform = 'translateY(0)';
+               e.target.style.boxShadow = '0 4px 6px rgba(0,0,0,0.07)';
+             }}>
+          <span style={{...styles.statNumber, color: '#27ae60'}}>
+            {stats.closed}
+          </span>
+          <span style={styles.statLabel}>🟢 Closed Tickets</span>
+        </div>
+      </div>
+
+      {/* Filter Section */}
+      <div style={styles.filterSection}>
+        <div style={styles.filterGrid}>
+          <input
+            type="text"
+            placeholder="Search tickets..."
+            value={filters.searchQuery}
+            onChange={(e) => setFilters(prev => ({ ...prev, searchQuery: e.target.value }))}
+            style={styles.filterInput}
+          />
+          
+          <select
+            value={filters.status}
+            onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+            style={styles.filterInput}
+          >
+            <option value="all">All Status</option>
+            <option value="open">Open</option>
+            <option value="in-progress">In Progress</option>
+            <option value="closed">Closed</option>
+          </select>
+          
+          <select
+            value={filters.sortBy}
+            onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value }))}
+            style={styles.filterInput}
+          >
+            <option value="newest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="title">Title A-Z</option>
+            <option value="status">By Status</option>
+          </select>
+        </div>
+        
+        <div>
+          <button onClick={clearFilters} style={styles.clearBtn}>
+            Clear
+          </button>
+          <span style={styles.resultsCount}>
+            {filteredTickets.length} of {tickets.length} tickets
+          </span>
+        </div>
+      </div>
+      
       {message && (
         <div style={{
           ...styles.notification,
@@ -264,18 +491,21 @@ const Admin = () => {
         </div>
       )}
 
-      {tickets.length === 0 ? (
+      {filteredTickets.length === 0 ? (
         <div style={styles.noTickets}>
-          <div style={styles.noTicketsText}>📋 No tickets found</div>
-          <div style={styles.noTicketsSubtext}>All tickets will appear here once users start creating them.</div>
+          <div style={styles.noTicketsText}>
+            {tickets.length === 0 ? '📋 No tickets found' : '🔍 No tickets match your filters'}
+          </div>
+          <div style={styles.noTicketsSubtext}>
+            {tickets.length === 0 
+              ? 'All tickets will appear here once users start creating them.'
+              : 'Try adjusting your search or filter criteria.'
+            }
+          </div>
         </div>
       ) : (
         <div>
-          <div style={{ marginBottom: '20px', color: '#6c757d', fontSize: '16px' }}>
-            <strong>Total Tickets:</strong> {tickets.length}
-          </div>
-          
-          {tickets.map((ticket) => (
+          {filteredTickets.map((ticket) => (
             <div
               key={ticket._id}
               style={styles.ticketCard}

@@ -39,6 +39,26 @@ const Dashboard = () => {
     }
   };
 
+  // Function to format date as DD/MM/YYYY
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  // Calculate ticket statistics
+  const getTicketStats = () => {
+    const stats = {
+      total: tickets.length,
+      open: tickets.filter(ticket => ticket.status === 'open').length,
+      inProgress: tickets.filter(ticket => ticket.status === 'in-progress').length,
+      closed: tickets.filter(ticket => ticket.status === 'closed').length
+    };
+    return stats;
+  };
+
   useEffect(() => {
     const fetchTickets = async () => {
       setLoading(true);
@@ -94,6 +114,8 @@ const Dashboard = () => {
     navigate('/');
   };
 
+  const stats = getTicketStats();
+
   const styles = {
     container: {
       maxWidth: '1200px',
@@ -131,6 +153,35 @@ const Dashboard = () => {
       fontWeight: '500',
       transition: 'all 0.3s ease',
       boxShadow: '0 2px 4px rgba(220,53,69,0.2)'
+    },
+    // Statistics Section
+    statsContainer: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+      gap: '20px',
+      marginBottom: '30px'
+    },
+    statCard: {
+      backgroundColor: 'white',
+      padding: '25px',
+      borderRadius: '12px',
+      boxShadow: '0 4px 6px rgba(0,0,0,0.07)',
+      textAlign: 'center',
+      transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+      border: '1px solid #e9ecef'
+    },
+    statNumber: {
+      fontSize: '36px',
+      fontWeight: 'bold',
+      marginBottom: '10px',
+      display: 'block'
+    },
+    statLabel: {
+      fontSize: '14px',
+      color: '#6c757d',
+      fontWeight: '600',
+      textTransform: 'uppercase',
+      letterSpacing: '0.5px'
     },
     formContainer: {
       backgroundColor: '#ffffff',
@@ -239,6 +290,21 @@ const Dashboard = () => {
       lineHeight: '1.5',
       marginBottom: '15px'
     },
+    ticketMeta: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: '15px',
+      flexWrap: 'wrap',
+      gap: '10px'
+    },
+    metaItem: {
+      fontSize: '13px',
+      color: '#666',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '5px'
+    },
     statusContainer: {
       display: 'flex',
       alignItems: 'center',
@@ -285,6 +351,69 @@ const Dashboard = () => {
         >
           Logout
         </button>
+      </div>
+
+      {/* Statistics Cards */}
+      <div style={styles.statsContainer}>
+        <div style={styles.statCard}
+             onMouseEnter={(e) => {
+               e.target.style.transform = 'translateY(-5px)';
+               e.target.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+             }}
+             onMouseLeave={(e) => {
+               e.target.style.transform = 'translateY(0)';
+               e.target.style.boxShadow = '0 4px 6px rgba(0,0,0,0.07)';
+             }}>
+          <span style={{...styles.statNumber, color: '#3498db'}}>
+            {stats.total}
+          </span>
+          <span style={styles.statLabel}>📋 Total Tickets</span>
+        </div>
+        
+        <div style={styles.statCard}
+             onMouseEnter={(e) => {
+               e.target.style.transform = 'translateY(-5px)';
+               e.target.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+             }}
+             onMouseLeave={(e) => {
+               e.target.style.transform = 'translateY(0)';
+               e.target.style.boxShadow = '0 4px 6px rgba(0,0,0,0.07)';
+             }}>
+          <span style={{...styles.statNumber, color: '#e74c3c'}}>
+            {stats.open}
+          </span>
+          <span style={styles.statLabel}>🔴 Open Tickets</span>
+        </div>
+        
+        <div style={styles.statCard}
+             onMouseEnter={(e) => {
+               e.target.style.transform = 'translateY(-5px)';
+               e.target.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+             }}
+             onMouseLeave={(e) => {
+               e.target.style.transform = 'translateY(0)';
+               e.target.style.boxShadow = '0 4px 6px rgba(0,0,0,0.07)';
+             }}>
+          <span style={{...styles.statNumber, color: '#f39c12'}}>
+            {stats.inProgress}
+          </span>
+          <span style={styles.statLabel}>🟡 In Progress</span>
+        </div>
+        
+        <div style={styles.statCard}
+             onMouseEnter={(e) => {
+               e.target.style.transform = 'translateY(-5px)';
+               e.target.style.boxShadow = '0 8px 25px rgba(0,0,0,0.15)';
+             }}
+             onMouseLeave={(e) => {
+               e.target.style.transform = 'translateY(0)';
+               e.target.style.boxShadow = '0 4px 6px rgba(0,0,0,0.07)';
+             }}>
+          <span style={{...styles.statNumber, color: '#27ae60'}}>
+            {stats.closed}
+          </span>
+          <span style={styles.statLabel}>🟢 Closed Tickets</span>
+        </div>
       </div>
 
       <div style={styles.formContainer}>
@@ -358,6 +487,19 @@ const Dashboard = () => {
               >
                 <h3 style={styles.ticketTitle}>{ticket.title}</h3>
                 <p style={styles.ticketDescription}>{ticket.description}</p>
+                
+                {/* Ticket Meta Information */}
+                <div style={styles.ticketMeta}>
+                  <div style={styles.metaItem}>
+                    <span>📅</span>
+                    <span><strong>Created:</strong> {formatDate(ticket.createdAt)}</span>
+                  </div>
+                  <div style={styles.metaItem}>
+                    <span>🆔</span>
+                    <span><strong>ID:</strong> {ticket._id.slice(-6)}</span>
+                  </div>
+                </div>
+                
                 <div style={styles.statusContainer}>
                   <span>Status:</span>
                   <span
